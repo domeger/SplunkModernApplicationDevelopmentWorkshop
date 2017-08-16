@@ -1,0 +1,103 @@
+version: "3.1"
+services:
+# # # # # # # # # # # # # # # # # # # # # # # # # # # 
+#      BEFORE YOU BEGIN
+# Please make sure you have run:
+#       docker swarm init
+#
+# then you can execute this environment using:   
+#          docker-compose up -d 
+# # # # # # # # # # # # # # # # # # # # # # # # # # #  
+
+
+# Buttercup-Go is the Node.js application that we'll be using in the workshop
+  buttercup-go:
+    image: tmartin14/buttercupgo
+    hostname: buttercup-go
+    ports:
+      - "3040:3040"
+    networks:
+      - appdev_workshop
+         
+
+# Bitbucket is used to manage our source code
+  bitbucket:
+    image: tmartin14/bitbucket_buttercupgo
+    hostname: bitbucket
+    ports:
+      - "7990:7990"
+      - "7999:7999"
+    networks:
+      - appdev_workshop
+
+
+# Jenkins is our automation server.  When code is committed in BitBucket, Jenkins will build & test it.
+  jenkins:
+    image: tmartin14/jenkins_buttercupgo
+    hostname: jenkins
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    networks:
+      - appdev_workshop
+
+
+# Slunk Enterprise to collect, aggregate, investigate and visualize the data
+  splunk-enterprise:
+    image: tmartin14/splunk_for_appdev_workshop
+    volumes:
+      - /opt/splunk/etc
+      - /opt/splunk/var
+    ports:
+      - "8000:8000"
+      - "9997:9997"
+      - "8088:8088"
+      - "8089:8089"
+    hostname: splunk-enterprise
+    environment:
+      SPLUNK_START_ARGS: "--accept-license --answer-yes"
+      SPLUNK_ENABLE_LISTEN: 9997
+      SPLUNK_ADD: tcp 1514
+      SPLUNK_USER: root
+      SPLUNK_CMD_1: "cmd python -c 'open(\"/opt/splunk/etc/.ui_login\", \"a\").close()'"
+    networks:
+      - appdev_workshop
+
+
+# This is the network that allows all of our components to talk to each other.
+networks:
+  appdev_workshop:
+    driver: overlay
+
+
+# The Splunk Forwarder will be used to gather metrics from our Docker environment
+  # splunk_forwarder:
+  #   image: splunk/universalforwarder:6.5.2-monitor
+  #   hostname: splunk-forwarder
+  #   environment:
+  #     SPLUNK_START_ARGS: --accept-license --answer-yes
+  #     SPLUNK_FORWARD_SERVER: splunk_enterprise:9997
+  #     SPLUNK_USER: root
+  #   volumes:
+  #     - /var/lib/docker/containers:/host/containers:ro
+  #     - /var/log:/docker/log:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   networks:
+  #     - appdev_workshop
+
+ 
+   # logging:
+    #     driver: "splunk"
+    #     options:
+    #         splunk-url: "https://hec.buttercuplabs.win:8088" 
+    #         splunk-token: "E31AE693-7E7D-4852-83D8-C4240FBA0516"
+    #         splunk-sourcetype: "docker"
+    #         tag: "{{.Name}}/{{.FullID}}"
+
+            # splunk-url: "http://localhost:8088" 
+            # splunk-token: "00000000-0000-0000-0000-000000000000"
+            # splunk-url: "https://hec.buttercuplabs.win" 
+            # splunk-token: "E31AE693-7E7D-4852-83D8-C4240FBA0516"
