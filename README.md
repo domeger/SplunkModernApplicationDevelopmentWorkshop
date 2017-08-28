@@ -1,4 +1,4 @@
-# Modern AppDev Workshop
+# Modern AppDev Workshop [![Build Status](https://travis-ci.org/domeger/SplunkModernApplicationDevelopmentWorkshop.svg?branch=master)](https://travis-ci.org/domeger/SplunkModernApplicationDevelopmentWorkshop)
 
 This repo contains materials for a hands-on workshop demonstrating how to use Splunk in a modern application development environment using technologies like Docker, Node.js, Javascript, Bitbucket, Jenkins, and New Relic.   
 
