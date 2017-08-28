@@ -1,0 +1,36 @@
+services:
+  - docker
+  
+env:
+  DOCKER_COMPOSE_VERSION: 2.0
+
+before_install:
+  - sudo apt-get update
+
+  # Now we can install the newer docker-engine which is required for the newer
+  # docker-composer we will install next. The messy options are to force it to
+  # be non-interactive (normally it asks you a bunch of config questions).
+  - wget -qO- https://get.docker.com/ | sh 
+  - sudo apt-get -y install python-pip
+  - sudo pip install docker-compose
+  
+  # Print out the current docker-compose version. Once this reports 1.6+ then we
+  # do not need the following steps.
+  - docker-compose --version
+
+  # Setup your application stack. You may need to tweak these commands if you
+  # doing out-of-the-ordinary docker-compose builds.
+  - docker swarm init
+  - docker-compose pull
+  - docker-compose up -d > /dev/null
+  
+  # You will want this for logging. If one of your containers does not build for
+  # whatever reason it's best to report that now before your tests start
+  # otherwise it can be really tricky to debug why tests are failing sometimes.
+  - docker ps
+  
+script:
+  - docker ps | grep -q splunk-enterprise  
+  
+after_install:
+  - docker-compose down
